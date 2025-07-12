@@ -10,6 +10,9 @@ Thumbs.db
 # Generated audio files
 audio/
 
+# Generated transcripts
+transcripts/
+
 # Test videos (large files)
 test_videos/
 
