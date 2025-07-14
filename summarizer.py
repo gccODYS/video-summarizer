@@ -138,6 +138,91 @@ def transcribe_audio(audio_path, output_path=None):
                 pass
         raise
 
+def summarize_transcript(transcript_path, output_path=None):
+    """
+    Generate AI summary from transcript using OpenAI GPT API
+    
+    Args:
+        transcript_path: Path to transcript file
+        output_path: Optional path for summary. If None, creates file in summaries/ directory
+    
+    Returns:
+        Path to summary file
+    """
+    if not os.path.exists(transcript_path):
+        raise FileNotFoundError(f"Transcript file not found: {transcript_path}")
+    
+    # Check for API key
+    api_key = os.getenv("OPENAI_API_KEY")
+    if not api_key:
+        raise ValueError("OPENAI_API_KEY environment variable not set. Please set your OpenAI API key.")
+    
+    # Create output path if not provided
+    if output_path is None:
+        script_dir = Path(__file__).parent
+        summary_dir = script_dir / "summaries"
+        summary_dir.mkdir(exist_ok=True)
+        
+        # Create filename based on transcript file name
+        transcript_name = Path(transcript_path).stem.replace("_transcript", "")
+        output_path = summary_dir / f"{transcript_name}_summary.txt"
+    
+    print(f"Summarizing transcript: {transcript_path}")
+    print(f"Output summary: {output_path}")
+    
+    try:
+        # Initialize OpenAI client
+        client = OpenAI(api_key=api_key)
+        
+        # Read transcript content
+        with open(transcript_path, "r", encoding="utf-8") as f:
+            transcript_content = f.read()
+        
+        # Create summary prompt
+        prompt = f"""Please provide a clear, concise summary of this video transcript. The summary should be useful for someone who wants to understand the key points without watching the entire video.
+
+Format your response as follows:
+
+## Brief Overview
+[2-3 sentences summarizing the main topic and purpose]
+
+## Key Points
+[Bulleted list of main takeaways]
+
+## Actionable Items
+[What viewers should do next or how to apply this information]
+
+Transcript:
+{transcript_content}"""
+        
+        # Generate summary using GPT
+        response = client.chat.completions.create(
+            model="gpt-3.5-turbo",
+            messages=[{"role": "user", "content": prompt}],
+            max_tokens=1000,
+            temperature=0.7
+        )
+        
+        summary = response.choices[0].message.content
+        
+        # Save summary to file
+        with open(output_path, "w", encoding="utf-8") as f:
+            f.write(summary)
+        
+        print(f"Summary completed: {output_path}")
+        print(f"Summary length: {len(summary)} characters")
+        return output_path
+        
+    except Exception as e:
+        print(f"Error during summarization: {e}")
+        # Clean up output file if it was created but summarization failed
+        if os.path.exists(output_path):
+            try:
+                os.remove(output_path)
+            except:
+                pass
+        raise
+
 def main():
     """Main function for testing video processing pipeline"""
     if len(sys.argv) < 2:
@@ -159,9 +244,15 @@ def main():
         transcript_path = transcribe_audio(audio_path)
         print(f"✅ Transcription completed: {transcript_path}")
         
+        # Step 3: Generate summary from transcript
+        print("\n=== Step 3: Generating Summary ===")
+        summary_path = summarize_transcript(transcript_path)
+        print(f"✅ Summary completed: {summary_path}")
+        
         print("\n=== Pipeline Complete ===")
         print(f"Audio: {audio_path}")
         print(f"Transcript: {transcript_path}")
+        print(f"Summary: {summary_path}")
         
     except Exception as e:
         print(f"❌ Error: {e}")

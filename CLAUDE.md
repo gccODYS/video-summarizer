@@ -1,29 +1,42 @@
 # CLAUDE.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
-
 ## Project Overview
 
-This is a video summarization application designed to be user-friendly for non-technical users. The main goal is to create an easy-to-use app that summarizes videos and allows users to ask questions about the video content.
+A terminal-based video summarization tool for non-technical users. Extracts audio from videos, transcribes to text, and generates AI summaries.
 
-**Key Priorities:**
-- Ease of use (target users are not familiar with coding/command line)
-- Ease of setup
-- Accuracy of summaries
-
-**Primary Use Case:** Summarizing long informational videos
+**Target Users:** Non-technical users who want to summarize long informational videos
+**Key Priorities:** Ease of use, ease of setup, accuracy of summaries
 
 ## Current Status
 
-This project is in its initial planning phase. The repository currently contains only the project description document (`project_description.md`) which outlines the goals and requirements.
+**Implemented:**
+- ✅ Video-to-audio extraction (ffmpeg)
+- ✅ Audio-to-text transcription (OpenAI Whisper API)
+- ✅ Text-to-summary generation (OpenAI GPT-3.5-turbo)
 
-## Development Notes
+## Architecture
 
-Since this is a new project with no existing code structure, future development should focus on:
+**Self-contained Python script** using PEP 723 dependency management:
+- No separate requirements.txt needed
+- Auto-installs dependencies with `uv`
+- Single executable file
 
-1. **Technology Stack Selection**: Choose technologies that align with the ease-of-use priority (likely web-based or desktop GUI)
-2. **User Interface**: Design should be intuitive for non-technical users
-3. **Video Processing**: Will need to implement video transcription and AI-powered summarization
-4. **Question Answering**: Interactive Q&A functionality about video content
+**Pipeline:** `video.mp4 → audio/video_audio.wav → transcripts/video_transcript.txt → summaries/video_summary.txt`
 
-When implementing this project, consider the target audience and prioritize simplicity in both setup and usage over advanced technical features.
+## Setup
+
+1. Install uv: `curl -LsSf https://astral.sh/uv/install.sh | sh`
+2. Set OpenAI API key: `export OPENAI_API_KEY=your_key_here`
+3. Run: `./summarizer.py video.mp4`
+
+## Usage
+
+```bash
+./summarizer.py video.mp4
+./summarizer.py "path/to/video file.mov"
+```
+
+**Output files:**
+- `audio/video_audio.wav` - Extracted audio (16kHz mono)
+- `transcripts/video_transcript.txt` - Speech-to-text transcript
+- `summaries/video_summary.txt` - AI-generated summary with key points and actionable items
